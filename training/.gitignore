@@ -1,0 +1,72 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# IDE / OS local state
+.idea/
+.vscode/
+.claude/
+.DS_Store
+Thumbs.db
+/install-claude.ps1
+
+# .NET build products
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Local datasets, downloaded imagery, caches and generated reports
+/data/
+/training_set/
+/runs/
+/outputs/
+/tmp/
+/tools/
+/deliverables/
+
+# Generated/export package copies. The tracked
+# platform_prediction_yolo_dotnet_export source remains canonical.
+/platform_prediction_project/
+/platform_prediction_dotnet_export/
+
+# Runtime outputs inside the canonical .NET package
+/platform_prediction_yolo_dotnet_export/dotnet_runs/
+/platform_prediction_yolo_dotnet_export/**/bin/
+/platform_prediction_yolo_dotnet_export/**/obj/
+/platform_prediction_yolo_dotnet_export/runs/
+/platform_prediction_yolo_dotnet_export/configs/test_matrix_*/
+
+# Large archives, checkpoints and model exports are opt-in.
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+
+# Required deployable models are intentionally versioned via Git LFS.
+# The three YOLO files form the default primary + cascade inference chain.
+!/onnx/floodnet_binary_aug_yolov8m_1024.onnx
+!/onnx/waterlogging_yolov8m_base_640.onnx
+!/onnx/waterlogging_yolov8m_hard_finetune_640.onnx
+!/onnx/dual_context_water_v2_large_1024_candidate.onnx
+
+# Standalone .NET delivery keeps an identical copy of the primary YOLO model.
+!/platform_prediction_yolo_dotnet_export/onnx/
+!/platform_prediction_yolo_dotnet_export/onnx/floodnet_binary_aug_yolov8m_1024.onnx
+
+# Root-level diagnostics and generated images
+/*.log
+/*.png

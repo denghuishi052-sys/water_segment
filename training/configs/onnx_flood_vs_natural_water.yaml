@@ -1,0 +1,30 @@
+# Deployment config for the two-class model: 0=flood, 1=natural_water.
+model_path: onnx/flood_vs_natural_water_yolov8m_1024_e120_transfer.onnx
+imgsz: 1024
+conf: 0.25
+iou: 0.5
+mask_thres: 0.50
+min_area_ratio: 0.0005
+morph_close: true
+max_det: 300
+nc: 2
+nm: 32
+target_class_ids: [0]
+cascade_enabled: false
+tile_size: 1024
+tile_overlap_px: 256
+tile_weight: 0.7
+tile_stitch_mode: max
+tile_weight_mode: hann
+tile_edge_weight: 0.3
+global_context_enabled: true
+global_context_strength: 0.5
+border_suppression_enabled: true
+border_margin_ratio: 0.01
+border_margin_min_px: 12
+border_touch_ratio_thresh: 0.35
+border_max_component_area_ratio: 0.08
+sam3_enabled: false
+providers:
+  - CUDAExecutionProvider
+  - CPUExecutionProvider

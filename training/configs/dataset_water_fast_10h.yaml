@@ -1,0 +1,5 @@
+path: D:\project\water_segment\data\water_fast_10h\processed
+train: images/train
+val: images/val
+names:
+  0: water

@@ -1,0 +1,21 @@
+model: yolov8m-seg.pt
+data: data/sen2gf3/processed/waterlogging.yaml
+imgsz: 640
+epochs: 120
+batch: 4
+device: 0
+workers: 2
+cache: false
+amp: true
+cos_lr: true
+close_mosaic: 10
+patience: 30
+
+optimizer: AdamW
+lr0: 0.0005
+momentum: 0.9
+weight_decay: 0.0005
+
+project: runs/segment
+name: sen2gf3_yolov8m_640
+exist_ok: false

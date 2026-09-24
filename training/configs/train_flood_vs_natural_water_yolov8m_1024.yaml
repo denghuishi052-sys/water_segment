@@ -1,0 +1,33 @@
+# Phase 1: learn flood and natural water as distinct semantic classes.
+# Phase 2 should fine-tune this checkpoint with manually labelled Google Earth tiles.
+# Transfer the FloodNet representation instead of re-learning water texture
+# from COCO. The incompatible class head is rebuilt automatically for nc=2.
+model: runs/segment/runs/segment/floodnet_yolov8m_1024_b4/weights/best.pt
+data: data/floodnet_flood_vs_water_1024/processed/flood_vs_water.yaml
+imgsz: 1024
+epochs: 120
+batch: 4
+device: 0
+workers: 2
+cache: false
+amp: true
+cos_lr: true
+close_mosaic: 20
+patience: 40
+optimizer: AdamW
+lr0: 0.0003
+momentum: 0.9
+weight_decay: 0.0005
+hsv_h: 0.015
+hsv_s: 0.35
+hsv_v: 0.35
+degrees: 10
+translate: 0.08
+scale: 0.45
+fliplr: 0.50
+flipud: 0.50
+mosaic: 0.60
+mixup: 0.0
+project: runs/segment
+name: flood_vs_natural_water_yolov8m_1024_e120_transfer
+exist_ok: false

@@ -1,0 +1,22 @@
+train_manifest: data/dual_context_water_v2/train.csv
+val_manifest: data/dual_context_water_v2/val.csv
+output_dir: runs/dual_context_water/convnext_tiny_mobilenetv3_extended
+init_checkpoint: runs/dual_context_water/convnext_tiny_mobilenetv3/best.pt
+
+local_backbone: convnext_tiny
+global_backbone: mobilenetv3_large_100
+decoder_channels: 128
+pretrained: false
+
+epochs: 50
+min_epochs: 25
+batch_size: 4
+gradient_accumulation: 1
+workers: 2
+learning_rate: 0.00008
+weight_decay: 0.0001
+global_loss_weight: 0.25
+quality_loss_weight: 0.05
+amp: true
+patience: 20
+seed: 20260729

@@ -1,0 +1,15 @@
+model: yolov8s-seg.pt
+data: data/processed/waterlogging.yaml
+imgsz: 640
+epochs: 120
+batch: 16
+device: 0
+workers: 2
+cache: false
+amp: true
+cos_lr: true
+close_mosaic: 10
+patience: 30
+project: runs/segment
+name: waterlogging_yolov8s_640
+exist_ok: true

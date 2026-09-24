@@ -1,0 +1,39 @@
+{
+  "modelType": "dual-context-onnx",
+  "modelPath": "onnx/dual_context_water_satellite_adapt_ian_to_ida_fp32.onnx",
+  "modelOptions": {
+    "runtime": "onnxruntime",
+    "outputFormat": "dense-logits",
+    "globalSize": 512
+  },
+  "preprocessOptions": {
+    "normalization": "imagenet",
+    "resizeMode": "reflect-pad"
+  },
+  "postprocessOptions": {
+    "stitchMode": "hann-weighted"
+  },
+  "imageSize": 1024,
+  "maskThreshold": 0.48,
+  "minAreaRatio": 0.00005,
+  "morphClose": false,
+  "suppressLargeBorderComponents": false,
+  "maxDetections": 300,
+  "classCount": 1,
+  "maskPrototypeCount": 32,
+  "tiling": {
+    "tileSize": 1024,
+    "overlapPixels": 256,
+    "weight": 1.0,
+    "stitchMode": "hann"
+  },
+  "largeImage": {
+    "mode": "full_quality",
+    "fastPreviewMaxSide": 1536,
+    "roiCoarseThreshold": 0.35,
+    "roiPaddingPixels": 64
+  },
+  "providers": [
+    "CPUExecutionProvider"
+  ]
+}

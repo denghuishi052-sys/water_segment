@@ -1,0 +1,43 @@
+# Trial configuration for the FloodNet fixed-multiscale model.
+model_path: onnx/floodnet_binary_multiscale_yolov8m_1024.onnx
+
+imgsz: 1024
+conf: 0.25
+iou: 0.5
+mask_thres: 0.5
+min_area_ratio: 0.0005
+morph_close: true
+max_det: 300
+
+nc: 1
+nm: 32
+
+cascade_enabled: true
+cascade_model_paths:
+  - onnx/waterlogging_yolov8m_base_640.onnx
+  - onnx/waterlogging_yolov8m_hard_finetune_640.onnx
+cascade_imgsz: 640
+cascade_conf: 0.15
+cascade_min_aspect_ratio: 1.15
+cascade_trigger_area_ratio: 0.005
+cascade_min_consensus_area_ratio: 0.005
+
+tile_size: 1024
+tile_overlap_px: 256
+tile_weight: 0.7
+tile_stitch_mode: max
+tile_weight_mode: hann
+tile_edge_weight: 0.3
+
+global_context_enabled: true
+global_context_strength: 0.5
+
+border_suppression_enabled: true
+border_margin_ratio: 0.01
+border_margin_min_px: 12
+border_touch_ratio_thresh: 0.35
+border_max_component_area_ratio: 0.08
+
+providers:
+  - CUDAExecutionProvider
+  - CPUExecutionProvider

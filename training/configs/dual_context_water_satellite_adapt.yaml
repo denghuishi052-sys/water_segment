@@ -1,0 +1,28 @@
+train_manifest: data/satellite_adaptation_v1/combined_train.csv
+val_manifest: data/satellite_adaptation_v1/satellite_val.csv
+output_dir: runs/dual_context_water/satellite_adapt_ian_to_ida_stable
+init_checkpoint: runs/dual_context_water/convnext_tiny_mobilenetv3_100plus/best.pt
+
+local_backbone: convnext_tiny
+global_backbone: mobilenetv3_large_100
+decoder_channels: 128
+pretrained: false
+context_beta_scale: 1.0
+reset_decoder_batchnorm: true
+
+epochs: 30
+min_epochs: 15
+batch_size: 4
+gradient_accumulation: 1
+workers: 2
+learning_rate: 0.00002
+weight_decay: 0.0002
+global_loss_weight: 0.25
+quality_loss_weight: 0.05
+satellite_batch_fraction: 0.40
+false_positive_weight: 1.25
+gradient_clip_norm: 1.0
+reset_best_metric: true
+amp: true
+patience: 10
+seed: 20260729

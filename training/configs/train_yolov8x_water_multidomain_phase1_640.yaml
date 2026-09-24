@@ -1,0 +1,31 @@
+# Larger, remote-sensing-oriented pretraining. YOLOv8x-seg retains the
+# existing single-class YOLOv8 ONNX tensor contract for direct .NET swap.
+model: yolov8x-seg-fresh.pt
+data: configs/dataset_water_multidomain.yaml
+imgsz: 640
+epochs: 30
+batch: 2
+device: 0
+workers: 2
+cache: false
+amp: true
+cos_lr: true
+close_mosaic: 10
+patience: 15
+optimizer: AdamW
+lr0: 0.0003
+momentum: 0.9
+weight_decay: 0.0005
+hsv_h: 0.015
+hsv_s: 0.35
+hsv_v: 0.35
+degrees: 12
+translate: 0.10
+scale: 0.50
+fliplr: 0.50
+flipud: 0.50
+mosaic: 0.50
+mixup: 0.0
+project: runs/segment
+name: yolov8x_water_multidomain_phase1_640
+exist_ok: false

@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YOLO + Base SAM3 + SAM3-LoRA 积水分割工程流程总结</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #647084;
+      --line: #dce4ef;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --green: #0f9f6e;
+      --orange: #d97706;
+      --red: #dc2626;
+      --code: #0f172a;
+      --code-bg: #eef4ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+        "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(37, 99, 235, 0.12), transparent 28rem),
+        radial-gradient(circle at 90% 10%, rgba(8, 145, 178, 0.10), transparent 30rem),
+        var(--bg);
+      line-height: 1.7;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 56px 28px 28px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto 64px;
+      padding: 0 28px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 26px;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 22px 0 10px;
+      font-size: 18px;
+    }
+
+    p { margin: 8px 0 12px; }
+
+    .subtitle {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 26px;
+      margin: 22px 0;
+      box-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    @media (max-width: 820px) {
+      .span-4, .span-6, .span-8 { grid-column: span 12; }
+      header, main { padding-left: 18px; padding-right: 18px; }
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #f9fbff);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric .value {
+      margin-top: 4px;
+      font-size: 28px;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+    }
+
+    .metric .note {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .ok { color: var(--green); }
+    .warn { color: var(--orange); }
+    .bad { color: var(--red); }
+    .blue { color: var(--blue); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef4ff;
+      color: #263650;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    code {
+      background: var(--code-bg);
+      color: var(--code);
+      padding: 2px 6px;
+      border-radius: 7px;
+      font-size: 0.92em;
+    }
+
+    pre {
+      margin: 14px 0 0;
+      padding: 18px;
+      overflow: auto;
+      border-radius: 18px;
+      background: #0f172a;
+      color: #e5eefc;
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    ul, ol { padding-left: 1.2em; }
+
+    .flow {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .num {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #e8f0ff;
+      color: var(--blue);
+      font-weight: 800;
+    }
+
+    .step-title {
+      font-weight: 760;
+      font-size: 16px;
+      margin-bottom: 3px;
+    }
+
+    .step-body {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .callout {
+      border-left: 5px solid var(--blue);
+      background: #eef6ff;
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-top: 14px;
+    }
+
+    .callout.warn {
+      border-left-color: var(--orange);
+      background: #fff7ed;
+      color: var(--ink);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>YOLO 引导的 SAM3-LoRA 积水分割工程流程总结</h1>
+    <p class="subtitle">
+      本文档总结当前工程从 YOLO 基线、Base SAM3 提示优化、Proposal 选择器，
+      到 SAM3-LoRA 微调与最终验证的完整工作流。当前原则是：生产默认保持 YOLO-only，
+      只有当 LoRA + selector 在验证集和最终封存 test 上同时满足精度约束时，才考虑启用。
+    </p>
+    <div class="meta">
+      <span class="pill">项目：water_segment</span>
+      <span class="pill">日期：2026-06-30</span>
+      <span class="pill">设备目标：RTX 3060 12GB</span>
+      <span class="pill">Test 集：最终冻结前封存</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. 项目目标与核心策略</h2>
+      <p>
+        原始问题是：直接用 Base SAM3 替换或扩张 YOLO 结果时，召回率可能提升，
+        但 precision 容易下降，导致整体 IoU 不稳定。因此工程路线从“直接微调 SAM3”
+        调整为更稳的两层结构：
+      </p>
+      <div class="flow">
+        <div class="step">
+          <div class="num">A</div>
+          <div>
+            <div class="step-title">YOLO 作为稳定主模型</div>
+            <div class="step-body">YOLO 先给出基础 mask，任何 SAM3/LoRA 结果都不能无约束覆盖 YOLO。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">B</div>
+          <div>
+            <div class="step-title">SAM3 只提供候选 proposal</div>
+            <div class="step-body">Base SAM3 或 SAM3-LoRA 生成 text+box、points、global 等候选，不直接作为最终输出。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">C</div>
+          <div>
+            <div class="step-title">Selector 学习是否采用 proposal</div>
+            <div class="step-body">选择器根据 overlap、coverage、growth、distance、score 等特征判断候选是否真的比 YOLO 好。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">D</div>
+          <div>
+            <div class="step-title">安全回退到 YOLO</div>
+            <div class="step-body">只要 selector、adapter 或 SAM3 worker 异常，最终仍保留 YOLO，避免生产路径被破坏。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. 总体流水线</h2>
+      <pre>输入图像
+  ↓
+YOLO / Cascade YOLO 基础分割
+  ↓
+从 YOLO 连通域生成局部提示
+  ├─ 扩展 box
+  ├─ 正点：连通域内部、距离变换采样
+  └─ 负点：扩展框与膨胀环带内、排除 YOLO 前景
+  ↓
+SAM3 或 SAM3-LoRA proposal 生成
+  ├─ text + box proposal
+  ├─ box + positive/negative points proposal
+  └─ global text proposal
+  ↓
+计算 proposal 特征与 delta_iou
+  ↓
+训练 / 加载 Proposal Selector
+  ↓
+规则安全过滤 + YOLO fallback
+  ↓
+最终积水 mask</pre>
+    </section>
+
+    <section class="card">
+      <h2>3. 已完成的工程阶段</h2>
+      <div class="grid">
+        <div class="metric span-4">
+          <div class="label">Base SAM3 selector</div>
+          <div class="value ok">已完成</div>
+          <div class="note">Base proposal 缓存与第一阶段选择器已训练。</div>
+        </div>
+        <div class="metric span-4">
+          <div class="label">SAM3-LoRA adapter</div>
+          <div class="value ok">已完成</div>
+          <div class="note">最佳 epoch 为第 8 轮。</div>
+        </div>
+        <div class="metric span-4">
+          <div class="label">LoRA proposal cache</div>
+          <div class="value warn">进行中</div>
+          <div class="note">已启用流式 JSONL 与断点续跑。</div>
+        </div>
+      </div>
+
+      <h3>关键产物</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>产物</th>
+            <th>路径</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Train/Val manifest</td>
+            <td><code>data/sam3_finetune/manifest_train_val.jsonl</code></td>
+            <td>已生成，test 不进入训练。</td>
+          </tr>
+          <tr>
+            <td>Base SAM3 proposals</td>
+            <td><code>data/sam3_finetune/base_proposals.jsonl</code></td>
+            <td>已完成。</td>
+          </tr>
+          <tr>
+            <td>Base selector</td>
+            <td><code>runs/sam3_finetune/base_selector.json</code></td>
+            <td>已完成。</td>
+          </tr>
+          <tr>
+            <td>LoRA adapter</td>
+            <td><code>runs/sam3_finetune/lora/best/adapter.pt</code></td>
+            <td>已完成。</td>
+          </tr>
+          <tr>
+            <td>LoRA proposals</td>
+            <td><code>data/sam3_finetune/lora_proposals.jsonl</code></td>
+            <td>进行中，流式写入。</td>
+          </tr>
+          <tr>
+            <td>LoRA selector</td>
+            <td><code>runs/sam3_finetune/lora_selector.json</code></td>
+            <td>等待 LoRA proposal 缓存完成后训练。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>4. 当前性能记录</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>阶段</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>IoU</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>YOLO-only Val baseline</td>
+            <td>0.7652</td>
+            <td>0.8041</td>
+            <td>0.6449</td>
+            <td>当前稳定基线。</td>
+          </tr>
+          <tr>
+            <td>Base SAM3 + Selector</td>
+            <td>0.7680</td>
+            <td>0.8165</td>
+            <td>0.6550</td>
+            <td>小幅正收益，precision 未下降。</td>
+          </tr>
+          <tr>
+            <td>SAM3-LoRA 内部 Val 最佳</td>
+            <td>0.8966</td>
+            <td>0.9095</td>
+            <td>0.8231</td>
+            <td>adapter 自身信号很强，但还不是最终完整 pipeline 指标。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout warn">
+        <strong>注意：</strong>SAM3-LoRA 的 0.8231 是 LoRA 训练器内部验证结果，
+        不能直接等同于最终系统性能。最终仍需等待
+        <code>YOLO → SAM3-LoRA proposals → selector → safety filter → YOLO fallback</code>
+        的完整 Val 结果。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5. 数据划分与封存原则</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Split</th>
+            <th>用途</th>
+            <th>约束</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Train</td>
+            <td>LoRA 训练、selector 训练、proposal 缓存</td>
+            <td>使用 FloodNet 训练原图与多尺度 crops。</td>
+          </tr>
+          <tr>
+            <td>Val</td>
+            <td>阈值选择、epoch 选择、模型选择</td>
+            <td>只用于选择配置，不作为最终 test。</td>
+          </tr>
+          <tr>
+            <td>Test</td>
+            <td>最终冻结后只运行一次</td>
+            <td>当前阶段完全封存，不进入训练、缓存、阈值选择。</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small">
+        所有 split 按 <code>source_stem</code> 校验，禁止同一原图衍生 crop 跨集合泄漏。
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>6. Base SAM3 阶段做了什么</h2>
+      <ol>
+        <li>把原来的单一 <code>sam3_conservative</code> 改为 <code>sam3_mode: conservative | balanced | open</code>。</li>
+        <li>增加局部提示：YOLO 连通域扩展 box、内部正点、外部负点。</li>
+        <li>将 text+box 与 interactive points 作为两个独立 proposal 分支。</li>
+        <li>增加受控 global proposal，用于 balanced/open 模式下恢复 YOLO 漏检区域。</li>
+        <li>重构 Fusion，显式计算 score、overlap、coverage、growth、distance、面积占比等特征。</li>
+        <li>记录失败案例与拒绝原因，为 LoRA 和 selector 提供训练数据依据。</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>7. Proposal Selector 的作用</h2>
+      <p>
+        Selector 是一个轻量 Logistic Regression，不依赖 pickle，而是导出纯 JSON。
+        它的核心作用是：判断一个 SAM3/SAM3-LoRA proposal 是否值得替换或补充 YOLO。
+      </p>
+      <h3>输入特征</h3>
+      <pre>score
+area_ratio
+overlap
+coverage
+iou
+area_growth
+distance_ratio
+candidate_area_ratio
+yolo_area_ratio
+yolo_confidence
+is_text_box
+is_interactive_points
+is_global_text</pre>
+      <h3>决策原则</h3>
+      <ul>
+        <li>预测收益不足阈值时，保留 YOLO。</li>
+        <li>不确定时，保留 YOLO。</li>
+        <li>adapter 或 selector 加载失败时，回退 Base SAM3 或 YOLO。</li>
+        <li>Base SAM3 失败时，整图回退 YOLO。</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>8. SAM3-LoRA 微调方案</h2>
+      <p>
+        LoRA 不修改基础 checkpoint，也不进行全量微调。当前实现为 Q/V-only LoRA：
+        包装 SAM3 视觉编码器中的 fused <code>qkv</code> 线性层，只对 Q 和 V 输出切片添加低秩增量。
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>配置项</th>
+            <th>当前值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Rank</td><td>4</td></tr>
+          <tr><td>Alpha</td><td>16</td></tr>
+          <tr><td>Dropout</td><td>0.05</td></tr>
+          <tr><td>Crop size</td><td>512</td></tr>
+          <tr><td>Batch</td><td>1</td></tr>
+          <tr><td>Gradient accumulation</td><td>8</td></tr>
+          <tr><td>Optimizer</td><td>AdamW</td></tr>
+          <tr><td>Learning rate</td><td>1e-4</td></tr>
+          <tr><td>Max epochs</td><td>20</td></tr>
+          <tr><td>Early stopping</td><td>Patience 5</td></tr>
+          <tr><td>Trainable parameters</td><td>524,288</td></tr>
+          <tr><td>Peak GPU memory</td><td>约 5.15GB</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>9. 当前正在运行的步骤</h2>
+      <p>
+        当前正在执行 <strong>LoRA proposal cache</strong>。这一步会对 1728 个 train/val 样本逐一生成 LoRA proposals，
+        并把每个 proposal 的 mask、特征、真实 <code>delta_iou</code> 写入 JSONL。
+      </p>
+      <pre>python scripts/16_cache_sam3_proposals.py \
+  --manifest data/sam3_finetune/manifest_train_val.jsonl \
+  --config configs/onnx_platform_sam3_lora_trial.yaml \
+  --output data/sam3_finetune/lora_proposals.jsonl \
+  --cache-dir data/sam3_finetune/lora_cache \
+  --resume</pre>
+      <div class="callout">
+        已修复缓存脚本：现在每处理完一个样本就流式写入 JSONL 和 summary。
+        即使中途中断，也可以通过 <code>--resume</code> 继续，不会丢掉已有 proposal 行。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>10. 最终验收标准</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>门槛</th>
+            <th>意义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Test Precision</td>
+            <td>不低于 <code>0.8124 - 0.01</code></td>
+            <td>precision 优先，避免误报扩张。</td>
+          </tr>
+          <tr>
+            <td>Test IoU</td>
+            <td>高于 YOLO-only <code>0.6645</code></td>
+            <td>必须带来整体有效提升。</td>
+          </tr>
+          <tr>
+            <td>Small-object recall</td>
+            <td>不低于 <code>0.6066</code>，且优于 Base SAM3</td>
+            <td>验证小水体恢复能力。</td>
+          </tr>
+          <tr>
+            <td>FP 图片数</td>
+            <td>不超过 YOLO-only 的 4 张</td>
+            <td>控制误报图片数量。</td>
+          </tr>
+          <tr>
+            <td>FN 图片数</td>
+            <td>不超过 3 张</td>
+            <td>控制漏检。</td>
+          </tr>
+          <tr>
+            <td>显存</td>
+            <td>峰值低于 10GB，无 OOM</td>
+            <td>保证 RTX 3060 12GB 可运行。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout warn">
+        如果 LoRA + selector 没有达到全部门槛，则不启用 adapter，
+        生产继续使用 YOLO-only。Open 模式只用于失败挖掘，不作为生产默认。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>11. 后续待办</h2>
+      <ol>
+        <li>等待 <code>data/sam3_finetune/lora_proposals.jsonl</code> 完整生成。</li>
+        <li>训练 <code>runs/sam3_finetune/lora_selector.json</code>。</li>
+        <li>比较 <code>Base SAM3 + selector</code> 与 <code>SAM3-LoRA + selector</code> 的 Val 指标。</li>
+        <li>若 Val 达标，冻结 adapter、selector、threshold 和配置文件。</li>
+        <li>最终只运行一次封存 test，生成最终报告。</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,16 @@
+model: runs/segment/runs/segment/waterlogging_yolov8m_640_b8-3/weights/best.pt
+data: data/hard_recall/waterlogging_hard_recall.yaml
+imgsz: 704
+epochs: 40
+batch: 1
+device: 0
+workers: 0
+cache: false
+amp: true
+cos_lr: true
+patience: 15
+lr0: 0.0001
+freeze: 10
+project: runs/segment
+name: waterlogging_yolov8m_hard_recall_freeze
+exist_ok: true

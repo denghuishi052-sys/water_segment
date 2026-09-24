@@ -1,0 +1,14 @@
+# A single semantic class across aerial, satellite, and urban flood imagery.
+# Every labelled water surface is foreground class 0.
+path: D:\project\water_segment
+train:
+  - data/combined_sen2gf3_gf/processed/images/train
+  - data/floodnet_binary_aug_1024/processed/images/train
+val:
+  - data/combined_sen2gf3_gf/processed/images/val
+  - data/floodnet_binary_aug_1024/processed/images/val
+test:
+  - data/combined_sen2gf3_gf/processed/images/test
+  - data/floodnet_binary_aug_1024/processed/images/test
+names:
+  0: water

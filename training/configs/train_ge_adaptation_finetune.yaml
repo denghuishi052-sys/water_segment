@@ -1,0 +1,30 @@
+# Phase 2. Fill this only after labelled Google Earth tiles have been merged
+# into a train/val dataset with the same classes: 0=flood, 1=natural_water.
+model: runs/segment/flood_vs_natural_water_yolov8m_1024/weights/best.pt
+data: data/ge_flood_vs_water_adaptation/flood_vs_water.yaml
+imgsz: 1024
+epochs: 80
+batch: 4
+device: 0
+workers: 2
+cache: false
+amp: true
+cos_lr: true
+close_mosaic: 10
+patience: 25
+optimizer: AdamW
+lr0: 0.0001
+weight_decay: 0.0005
+hsv_h: 0.010
+hsv_s: 0.25
+hsv_v: 0.25
+degrees: 5
+translate: 0.05
+scale: 0.30
+fliplr: 0.50
+flipud: 0.50
+mosaic: 0.30
+mixup: 0.0
+project: runs/segment
+name: ge_flood_vs_water_adaptation_yolov8m_1024
+exist_ok: false

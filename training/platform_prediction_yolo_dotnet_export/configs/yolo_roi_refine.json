@@ -1,0 +1,115 @@
+﻿{
+    "modelType":  "yolo-onnx",
+    "modelPath":  "onnx/floodnet_binary_aug_yolov8m_1024.onnx",
+    "pipeline":  {
+                     "type":  "segmentation",
+                     "steps":  [
+                                   {
+                                       "name":  "preprocess",
+                                       "type":  "letterbox",
+                                       "enabled":  true,
+                                       "parameters":  {
+                                                          "imageSize":  1024,
+                                                          "padColor":  [
+                                                                           114,
+                                                                           114,
+                                                                           114
+                                                                       ]
+                                                      }
+                                   },
+                                   {
+                                       "name":  "inference",
+                                       "type":  "yolo-onnx",
+                                       "enabled":  true,
+                                       "parameters":  {
+                                                          "modelPath":  "onnx/floodnet_binary_aug_yolov8m_1024.onnx",
+                                                          "confidenceThreshold":  0.25,
+                                                          "iouThreshold":  0.5
+                                                      }
+                                   },
+                                   {
+                                       "name":  "postprocess",
+                                       "type":  "binary-mask",
+                                       "enabled":  true,
+                                       "parameters":  {
+                                                          "maskThreshold":  0.65,
+                                                          "minAreaRatio":  0.0005,
+                                                          "morphClose":  true
+                                                      }
+                                   },
+                                   {
+                                       "name":  "output",
+                                       "type":  "mask-overlay-files",
+                                       "enabled":  true,
+                                       "parameters":  {
+                                                          "saveMask":  true,
+                                                          "saveOverlay":  true
+                                                      }
+                                   }
+                               ],
+                     "options":  {
+                                     "description":  "Current YOLO-only segmentation chain. Future chains can replace or add steps without changing PredictionService."
+                                 }
+                 },
+    "modelOptions":  {
+                         "runtime":  "onnxruntime",
+                         "outputFormat":  "yolov8-seg"
+                     },
+    "preprocessOptions":  {
+                              "resizeMode":  "letterbox",
+                              "padColor":  [
+                                               114,
+                                               114,
+                                               114
+                                           ]
+                          },
+    "postprocessOptions":  {
+                               "stitchMode":  "max",
+                               "maskValueForeground":  1,
+                               "maskValueBackground":  0
+                           },
+    "outputOptions":  {
+                          "maskSuffix":  "_pred.png",
+                          "overlaySuffix":  "_overlay.jpg"
+                      },
+    "imageSize":  1024,
+    "confidenceThreshold":  0.25,
+    "iouThreshold":  0.5,
+    "maskThreshold":  0.65,
+    "maskBoxExpandRatio":  0.5,
+    "minAreaRatio":  0.0005,
+    "morphClose":  true,
+    "suppressLargeBorderComponents":  false,
+    "largeBorderComponentMinAreaRatio":  0.15,
+    "largeBorderComponentMarginRatio":  0.03,
+    "maxDetections":  300,
+    "classCount":  1,
+    "maskPrototypeCount":  32,
+    "cascade":  {
+                    "enabled":  false,
+                    "modelPaths":  [
+
+                                   ],
+                    "imageSize":  640,
+                    "confidenceThreshold":  0.15,
+                    "minAspectRatio":  1.15,
+                    "triggerAreaRatio":  0.005,
+                    "minConsensusAreaRatio":  0.005
+                },
+    "tiling":  {
+                   "tileSize":  1024,
+                   "overlapPixels":  256,
+                   "weight":  0.7,
+                   "stitchMode":  "max"
+               },
+    "largeImage":  {
+                       "mode":  "roi_refine",
+                       "fastPreviewMaxSide":  1024,
+                       "roiCoarseThreshold":  0.35,
+                       "roiPaddingPixels":  64
+                   },
+    "providers":  [
+                      "CUDAExecutionProvider",
+                      "CPUExecutionProvider"
+                  ]
+}

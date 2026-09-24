@@ -1,0 +1,76 @@
+model_path: onnx/floodnet_binary_aug_yolov8m_1024.onnx
+imgsz: 1024
+conf: 0.25
+iou: 0.5
+mask_thres: 0.5
+min_area_ratio: 0.0005
+morph_close: true
+max_det: 300
+nc: 1
+nm: 32
+
+cascade_enabled: true
+cascade_model_paths:
+  - onnx/waterlogging_yolov8m_base_640.onnx
+  - onnx/waterlogging_yolov8m_hard_finetune_640.onnx
+cascade_imgsz: 640
+cascade_conf: 0.15
+cascade_min_aspect_ratio: 1.15
+cascade_trigger_area_ratio: 0.005
+cascade_min_consensus_area_ratio: 0.005
+
+tile_size: 1024
+tile_overlap_px: 256
+tile_weight: 0.7
+
+sam3_enabled: true
+sam3_mode: conservative
+sam3_checkpoint: "D:/BaiduNetdiskDownload/课程- 权重(1)/sam3.pt"
+sam3_device: cuda
+sam3_use_child_process: true
+sam3_compile: false
+sam3_confidence: 0.5
+sam3_local_refine_enabled: true
+sam3_prompt_strategy: text_box_points
+sam3_box_margin_ratio: 0.15
+sam3_min_component_area_ratio: 0.0003
+sam3_max_candidates: 12
+sam3_positive_points_per_component: 5
+sam3_negative_points_per_component: 8
+sam3_negative_ring_ratio: 0.20
+sam3_local_score_thresh: 0.25
+sam3_global_text_enabled: true
+sam3_global_max_side: 1280
+sam3_global_score_thresh: 0.35
+sam3_global_max_area_ratio: 0.35
+sam3_min_yolo_overlap: 0.15
+sam3_min_yolo_coverage: 0.30
+sam3_balanced_max_distance_ratio: 0.15
+sam3_max_area_growth_conservative: 2.5
+sam3_max_area_growth_balanced: 4.0
+sam3_max_area_growth_open: 8.0
+sam3_text_prompts:
+  - standing water
+  - flood water
+  - flooded road
+  - water-covered road
+  - puddle on road
+  - urban waterlogging
+  - inundated pavement
+sam3_adapter_enabled: false
+sam3_adapter_type: qv_lora
+sam3_lora_path: ""
+sam3_lora_rank: 4
+sam3_lora_alpha: 16.0
+sam3_lora_dropout: 0.05
+sam3_lora_target_modules: []
+sam3_adapter_strict_fingerprint: true
+sam3_selector_enabled: false
+sam3_selector_path: ""
+sam3_selector_accept_threshold: null
+sam3_debug_dir: ""
+sam3_save_debug_proposals: false
+
+providers:
+  - CUDAExecutionProvider
+  - CPUExecutionProvider

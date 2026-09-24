@@ -1,0 +1,31 @@
+# Compact training run sized for a 12 GB RTX 3060 and a <=10 hour delivery.
+# It remains a one-class YOLOv8 segmentation model for direct ONNX replacement.
+model: yolov8l-seg-fresh.pt
+data: configs/dataset_water_fast_10h.yaml
+imgsz: 768
+epochs: 12
+batch: 2
+device: 0
+workers: 2
+cache: false
+amp: true
+cos_lr: true
+close_mosaic: 4
+patience: 5
+optimizer: AdamW
+lr0: 0.0004
+momentum: 0.9
+weight_decay: 0.0005
+hsv_h: 0.015
+hsv_s: 0.30
+hsv_v: 0.30
+degrees: 10
+translate: 0.08
+scale: 0.40
+fliplr: 0.50
+flipud: 0.50
+mosaic: 0.40
+mixup: 0.0
+project: runs/segment
+name: yolov8l_water_fast_10h
+exist_ok: false

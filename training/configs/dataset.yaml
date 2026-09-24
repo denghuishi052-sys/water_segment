@@ -1,0 +1,20 @@
+raw_image_dir: data/raw/images
+raw_mask_dir: data/raw/masks
+processed_dir: data/processed
+class_id: 0
+class_name: waterlogging
+split:
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  seed: 42
+  group_by_prefix: true
+mask:
+  # The uploaded masks use black background and red water region.
+  # Red is RGB=(128, 0, 0), not BGR.
+  mode: red
+  foreground_rgb: [128, 0, 0]
+  tolerance: 10
+mask_to_yolo:
+  min_area: 20
+  epsilon_ratio: 0.002

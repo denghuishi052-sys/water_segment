@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>道路积水分割平台 - 实际技术框架</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #eef2f4;
+      --text: #172026;
+      --muted: #607079;
+      --line: #ccd5da;
+      --blue: #1769aa;
+      --blue-soft: #e5f1fa;
+      --green: #18794e;
+      --green-soft: #e3f3eb;
+      --red: #b42318;
+      --red-soft: #fde9e7;
+      --amber: #9a6700;
+      --amber-soft: #fff1cc;
+      --code: #18232b;
+      --code-text: #e8f0f4;
+      --shadow: 0 4px 18px rgba(19, 34, 44, .08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #11171b;
+        --surface: #182126;
+        --surface-2: #202b31;
+        --text: #edf3f5;
+        --muted: #a8b5bc;
+        --line: #36464f;
+        --blue: #68b5ea;
+        --blue-soft: #173447;
+        --green: #68d39b;
+        --green-soft: #173a2b;
+        --red: #ff8a80;
+        --red-soft: #452522;
+        --amber: #f2c14e;
+        --amber-soft: #453817;
+        --code: #0b1013;
+        --code-text: #dce8ed;
+        --shadow: none;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    a { color: var(--blue); }
+    code, pre {
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 26px 18px;
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 24px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--blue);
+      font-size: 18px;
+    }
+
+    nav a {
+      display: block;
+      padding: 7px 10px;
+      margin: 2px 0;
+      border-left: 3px solid transparent;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: var(--text);
+      border-left-color: var(--blue);
+      background: var(--surface-2);
+    }
+
+    .aside-meta {
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    main {
+      width: min(1180px, 100%);
+      padding: 38px 42px 72px;
+      margin: 0 auto;
+    }
+
+    header {
+      padding-bottom: 27px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 6px 0 10px;
+      font-size: 48px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    header p {
+      max-width: 850px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    section {
+      padding-top: 40px;
+      scroll-margin-top: 20px;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 25px;
+      line-height: 1.25;
+    }
+
+    h3 {
+      margin: 0 0 9px;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    p { margin: 8px 0 14px; }
+    .muted { color: var(--muted); }
+
+    .stat-grid, .stack-grid, .model-grid, .module-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .stack-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .model-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .panel {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .stat strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--blue);
+      font-size: 27px;
+      line-height: 1.2;
+    }
+
+    .stat span { color: var(--muted); font-size: 13px; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      margin: 2px 3px 2px 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 12px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: minmax(155px, 1fr) 34px minmax(170px, 1fr) 34px minmax(180px, 1fr);
+      gap: 7px;
+      align-items: stretch;
+      margin: 17px 0;
+    }
+
+    .flow-node {
+      min-height: 108px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--blue);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .flow-node.green { border-top-color: var(--green); }
+    .flow-node.amber { border-top-color: var(--amber); }
+    .flow-node.red { border-top-color: var(--red); }
+
+    .flow-node small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .arrow {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 23px;
+    }
+
+    .decision {
+      margin: 18px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--amber);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .decision code {
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .model-role {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .model-role.fallback {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    pre {
+      overflow: auto;
+      margin: 12px 0;
+      padding: 16px;
+      border-radius: 6px;
+      color: var(--code-text);
+      background: var(--code);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .callout {
+      padding: 15px 17px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--green);
+      border-radius: 6px;
+      background: var(--green-soft);
+    }
+
+    .callout.warn {
+      border-left-color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    figure {
+      margin: 18px 0 0;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    figcaption {
+      padding: 10px 14px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .module-path {
+      display: block;
+      margin-top: 7px;
+      color: var(--blue);
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      nav {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+      }
+      nav a {
+        flex: 0 0 auto;
+        border-left: 0;
+        border-bottom: 3px solid transparent;
+      }
+      main { padding: 28px 20px 58px; }
+      .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stack-grid, .model-grid, .module-grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); min-height: 26px; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 34px; }
+      .stat-grid { grid-template-columns: 1fr; }
+      th, td { padding: 8px; }
+      table { font-size: 12px; }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .layout { display: block; }
+      aside { display: none; }
+      main { width: 100%; padding: 0; }
+      .panel, .flow-node, figure { box-shadow: none; break-inside: avoid; }
+      section { break-inside: auto; }
+      a { color: #111; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        <span class="brand-mark">水</span>
+        <span>WaterSeg 技术框架</span>
+      </div>
+      <nav aria-label="文档目录">
+        <a href="#overview">系统总览</a>
+        <a href="#stack">技术栈</a>
+        <a href="#training">训练链路</a>
+        <a href="#models">模型体系</a>
+        <a href="#inference">推理决策流</a>
+        <a href="#tiling">大图处理</a>
+        <a href="#modules">代码模块</a>
+        <a href="#config">运行参数</a>
+        <a href="#results">验证结果</a>
+        <a href="#commands">运行方式</a>
+      </nav>
+      <div class="aside-meta">
+        基于当前项目代码与配置整理<br>
+        更新日期：2026-06-23
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div class="eyebrow">Current Production Architecture</div>
+        <h1>道路积水分割平台<br>实际技术框架</h1>
+        <p>
+          当前系统采用 YOLOv8 实例分割训练、ONNX Runtime 部署、主模型与道路场景回退模型级联，
+          并通过软分块融合处理大尺寸图像。运行阶段不依赖 PyTorch 或 Ultralytics。
+        </p>
+      </header>
+
+      <section id="overview">
+        <h2>系统总览</h2>
+        <div class="stat-grid">
+          <div class="panel stat"><strong>3</strong><span>个生产 ONNX 分割模型</span></div>
+          <div class="panel stat"><strong>1024</strong><span>主模型固定输入尺寸</span></div>
+          <div class="panel stat"><strong>0.6687</strong><span>FloodNet 测试集 Pixel IoU</span></div>
+          <div class="panel stat"><strong>52 / 1</strong><span>测试通过 / 条件跳过</span></div>
+        </div>
+
+        <div class="flow" aria-label="系统端到端流程">
+          <div class="flow-node">
+            <h3>数据与训练</h3>
+            <small>FloodNet 二分类转换、视角裁剪、旋转、透视与颜色增强，训练 YOLOv8m-seg。</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-node green">
+            <h3>ONNX 部署</h3>
+            <small>固定输入导出，ONNX Runtime CUDA 优先，CPU 自动回退。</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-node amber">
+            <h3>自适应推理</h3>
+            <small>主模型、低响应级联、软 tiled 融合、连通域清理与结果可视化。</small>
+          </div>
+        </div>
+      </section>
+
+      <section id="stack">
+        <h2>技术栈</h2>
+        <div class="stack-grid">
+          <div class="panel">
+            <h3>训练与实验</h3>
+            <span class="tag">Python 3.10</span>
+            <span class="tag">PyTorch 2.5.0 + CUDA 12.1</span>
+            <span class="tag">Ultralytics 8.4.56</span>
+            <span class="tag">YOLOv8m-seg</span>
+            <span class="tag">AMP</span>
+            <p class="muted">负责数据增强、训练、验证、权重导出和实验指标分析。</p>
+          </div>
+          <div class="panel">
+            <h3>生产推理</h3>
+            <span class="tag">ONNX Runtime 1.23.2</span>
+            <span class="tag">CUDAExecutionProvider</span>
+            <span class="tag">CPUExecutionProvider</span>
+            <span class="tag">NumPy 2.2.6</span>
+            <span class="tag">OpenCV 4.13.0</span>
+            <p class="muted">纯 NumPy + OpenCV 解码 YOLOv8-seg 输出，无运行时 PyTorch 依赖。</p>
+          </div>
+          <div class="panel">
+            <h3>交互与工程</h3>
+            <span class="tag">Gradio 5.x</span>
+            <span class="tag">argparse CLI</span>
+            <span class="tag">PyYAML 6.0.3</span>
+            <span class="tag">pandas 2.2.3</span>
+            <span class="tag">pytest</span>
+            <p class="muted">提供单图、目录批处理、Web UI、配置管理、指标导出和回归测试。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="training">
+        <h2>训练链路</h2>
+        <div class="flow">
+          <div class="flow-node">
+            <h3>原始 FloodNet</h3>
+            <small>将 flooded road、water 等非背景类别合并为二分类 waterlogging。</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-node green">
+            <h3>离线数据增强</h3>
+            <small>裁剪模拟不同高度视角、±15°旋转、透视、翻转、亮度/对比度、模糊与噪声。</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-node amber">
+            <h3>YOLOv8m-seg</h3>
+            <small>1024 输入、batch 4、AdamW、AMP、Cosine LR、Early Stopping。</small>
+          </div>
+        </div>
+
+        <table>
+          <thead><tr><th>训练项</th><th>当前值</th><th>作用</th></tr></thead>
+          <tbody>
+            <tr><td>基础模型</td><td><code>yolov8m-seg.pt</code></td><td>中等规模实例分割骨干</td></tr>
+            <tr><td>输入尺寸</td><td>1024 × 1024</td><td>保留航拍图中的细粒度边界</td></tr>
+            <tr><td>优化器</td><td>AdamW，lr0=0.0003</td><td>稳定微调预训练权重</td></tr>
+            <tr><td>增强</td><td>degrees=15，scale=0.5，mosaic=0.8</td><td>提升尺度、方向和视角鲁棒性</td></tr>
+            <tr><td>停止策略</td><td>epochs=500，patience=100</td><td>实际训练由早停保留最佳权重</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="models">
+        <h2>生产模型体系</h2>
+        <div class="model-grid">
+          <div class="panel">
+            <span class="model-role">主模型</span>
+            <h3>FloodNet Binary Aug</h3>
+            <p>负责常规航拍和水域分割，是每次请求首先执行的模型。</p>
+            <span class="module-path">onnx/floodnet_binary_aug_yolov8m_1024.onnx</span>
+            <p class="muted">输入 1024，输出通道 37，置信度阈值 0.25。</p>
+          </div>
+          <div class="panel">
+            <span class="model-role fallback">回退模型 A</span>
+            <h3>Road Flood Base</h3>
+            <p>由 3908 张城市道路积水/无水数据训练，对道路洪水和斜视场景召回更强。</p>
+            <span class="module-path">onnx/waterlogging_yolov8m_base_640.onnx</span>
+            <p class="muted">输入 640，级联置信度阈值 0.15。</p>
+          </div>
+          <div class="panel">
+            <span class="model-role fallback">回退模型 B</span>
+            <h3>Hard Finetune</h3>
+            <p>困难样本微调模型，与 Base 取像素交集，约束跨域误报。</p>
+            <span class="module-path">onnx/waterlogging_yolov8m_hard_finetune_640.onnx</span>
+            <p class="muted">输入 640，仅在满足级联条件时惰性加载。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="inference">
+        <h2>推理决策流</h2>
+        <div class="flow">
+          <div class="flow-node">
+            <h3>1. 主模型推理</h3>
+            <small>Letterbox → NCHW float → ONNX → NMS → proto mask 解码 → 二值掩膜。</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-node amber">
+            <h3>2. 场景判定</h3>
+            <small>主模型面积低于 0.5%，且长宽比至少 1.15，才触发道路模型级联。</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-node green">
+            <h3>3. 保守共识</h3>
+            <small>Base ∩ Hard Finetune；交集面积达到 0.5% 才替换主结果。</small>
+          </div>
+        </div>
+
+        <div class="decision">
+          <strong>当前级联规则</strong>
+          <pre>trigger =
+  cascade_enabled
+  AND primary_area_ratio &lt; 0.005
+  AND max(width / height, height / width) &gt;= 1.15
+
+fallback_consensus = base_mask AND hard_finetune_mask
+
+accept =
+  fallback_consensus_area_ratio &gt;= 0.005</pre>
+          <p class="muted">
+            方形航拍图默认不进入道路级联，防止道路模型在草地、屋顶或阴影区域产生额外误报。
+          </p>
+        </div>
+      </section>
+
+      <section id="tiling">
+        <h2>大图处理与软分块融合</h2>
+        <p>
+          大尺寸或长矩形图像可以切成 1024 像素 tile，默认重叠 256 像素。
+          每个 tile 返回浮点概率图，重叠区域先求平均，再与整图结果进行软融合。
+        </p>
+        <pre>tiled_probability = average(stitched_tile_probabilities)
+
+combined_probability =
+  max(coarse_binary, 0.7 * tiled_probability)
+
+final_mask =
+  postprocess(combined_probability &gt;= 0.5)</pre>
+        <div class="callout">
+          <strong>为什么不用硬门控：</strong>
+          旧逻辑要求 tile 预测必须落在整图粗掩膜附近，因此整图漏掉的水域永远无法由 tile 补回。
+          当前软融合允许高置信度局部结果存活，同时通过 0.7 权重、最小面积和后处理控制误报。
+        </div>
+      </section>
+
+      <section id="modules">
+        <h2>代码模块职责</h2>
+        <div class="module-grid">
+          <div class="panel"><h3>配置中心</h3><p>模型路径、阈值、级联和 tiled 参数的单一事实来源。</p><span class="module-path">waterseg_platform/config.py</span></div>
+          <div class="panel"><h3>ONNX 引擎</h3><p>Provider 选择、CUDA DLL 引导、Session 生命周期和原始推理。</p><span class="module-path">waterseg_platform/engine.py</span></div>
+          <div class="panel"><h3>预处理</h3><p>Letterbox、RGB/BGR 处理、归一化和 NCHW 连续数组转换。</p><span class="module-path">waterseg_platform/preprocessing.py</span></div>
+          <div class="panel"><h3>后处理</h3><p>类别分数、NMS、mask coefficient × prototype、坐标逆变换。</p><span class="module-path">waterseg_platform/postprocessing.py</span></div>
+          <div class="panel"><h3>分块算法</h3><p>Tile 网格生成、重叠区域累计和概率平均。</p><span class="module-path">waterseg_platform/tiling.py</span></div>
+          <div class="panel"><h3>服务编排</h3><p>主模型、惰性回退模型、级联决策、软 tiled 融合和批处理。</p><span class="module-path">waterseg_platform/pipeline.py</span></div>
+          <div class="panel"><h3>交互界面</h3><p>Gradio 单图/目录界面，提供阈值与 tiled 参数控制。</p><span class="module-path">waterseg_platform/ui_gradio.py</span></div>
+          <div class="panel"><h3>命令行</h3><p>单图、目录、Web UI 和配置导出入口。</p><span class="module-path">waterseg_platform/cli.py</span></div>
+        </div>
+        <p class="muted">
+          关键纯函数：<code>choose_cascade_mask()</code> 负责保守级联决策，
+          <code>soft_fuse_masks()</code> 负责整图与 tiled 概率融合。
+        </p>
+      </section>
+
+      <section id="config">
+        <h2>当前运行参数</h2>
+        <table>
+          <thead><tr><th>参数</th><th>值</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td><code>imgsz</code></td><td>1024</td><td>主模型输入尺寸</td></tr>
+            <tr><td><code>conf / iou</code></td><td>0.25 / 0.5</td><td>主模型候选阈值与 NMS IoU</td></tr>
+            <tr><td><code>mask_thres</code></td><td>0.5</td><td>像素概率二值化阈值</td></tr>
+            <tr><td><code>min_area_ratio</code></td><td>0.0005</td><td>移除过小连通区域</td></tr>
+            <tr><td><code>morph_close</code></td><td>true</td><td>3×3 椭圆核闭运算</td></tr>
+            <tr><td><code>cascade_conf</code></td><td>0.15</td><td>两个道路回退模型的独立阈值</td></tr>
+            <tr><td><code>cascade_min_aspect_ratio</code></td><td>1.15</td><td>道路场景级联的画幅门槛</td></tr>
+            <tr><td><code>cascade_trigger_area_ratio</code></td><td>0.005</td><td>主模型低响应触发阈值</td></tr>
+            <tr><td><code>tile_size / overlap</code></td><td>1024 / 256</td><td>大图分块尺寸与重叠</td></tr>
+            <tr><td><code>tile_weight</code></td><td>0.7</td><td>局部 tile 概率融合权重</td></tr>
+            <tr><td><code>providers</code></td><td>CUDA → CPU</td><td>GPU 优先，CPU 自动回退</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="results">
+        <h2>当前验证结果</h2>
+        <div class="stat-grid">
+          <div class="panel stat"><strong>0.8064</strong><span>Pixel Precision</span></div>
+          <div class="panel stat"><strong>0.7966</strong><span>Pixel Recall</span></div>
+          <div class="panel stat"><strong>0.8015</strong><span>Pixel Dice / F1</span></div>
+          <div class="panel stat"><strong>0.6687</strong><span>Pixel IoU</span></div>
+        </div>
+
+        <div class="callout warn" style="margin-top:16px">
+          <strong>示例城市洪涝图：</strong>
+          主模型预测面积由约 0.057% 经级联提升到 8.95%，恢复中央和左侧主要淹水道路。
+          单图级联与软 tiled 级联最终结果一致。
+        </div>
+
+        <figure>
+          <img src="../runs/platform_test/test_image_cascade_soft_tiling_final/comparison.jpg"
+               alt="整图级联与软 tiled 级联预测效果对比">
+          <figcaption>左：整图级联；右：软 tiled + 级联。绿色区域为最终积水预测。</figcaption>
+        </figure>
+
+        <figure>
+          <img src="../runs/segment/runs/segment/floodnet_binary_aug_yolov8m_1024_b4/results.png"
+               alt="YOLOv8m-seg 训练曲线">
+          <figcaption>主模型训练损失、验证损失与 Box/Mask 指标曲线。</figcaption>
+        </figure>
+      </section>
+
+      <section id="commands">
+        <h2>运行方式</h2>
+        <h3>启动 Gradio 平台</h3>
+        <pre>C:\Users\17473\miniforge3\envs\torch_env\python.exe ^
+  -m waterseg_platform.cli ui ^
+  --config configs/onnx_platform.yaml</pre>
+
+        <h3>单图推理</h3>
+        <pre>C:\Users\17473\miniforge3\envs\torch_env\python.exe ^
+  -m waterseg_platform.cli ^
+  --config configs/onnx_platform.yaml ^
+  --image C:\path\to\image.png ^
+  --output_dir runs\platform_output ^
+  --save_overlay</pre>
+
+        <h3>目录批处理</h3>
+        <pre>C:\Users\17473\miniforge3\envs\torch_env\python.exe ^
+  -m waterseg_platform.cli dir ^
+  --config configs/onnx_platform.yaml ^
+  --image_dir C:\path\to\images ^
+  --output_dir runs\platform_batch</pre>
+      </section>
+
+      <footer>
+        <strong>关键边界：</strong>
+        训练环境使用 PyTorch 与 Ultralytics；生产平台只使用 ONNX Runtime、NumPy 和 OpenCV。
+        当前级联是针对跨域城市道路洪涝的保守补偿机制，并非替代主模型。
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
